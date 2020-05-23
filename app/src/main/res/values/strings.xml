@@ -1,0 +1,7 @@
+<resources>
+    <string name="app_name">Éphéméride</string>
+    <string name="ephemeride_channel_id">ephemeride</string>
+    <string name="ephemeride_channel_name">Éphéméride</string>
+    <string name="ephemeride_channel_description">Nouvelles éphémères relative au jour.</string>
+    <string name="ephemeride_title">Éphéméride du %1$te %1$tB</string>
+</resources>
