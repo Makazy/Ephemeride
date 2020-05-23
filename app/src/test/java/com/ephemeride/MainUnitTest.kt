@@ -1,9 +1,5 @@
 package com.ephemeride
 
-import com.android.volley.toolbox.Volley
-import com.ephemeride.services.WikipediaAPIClient
-import com.ephemeride.services.WikipediaQuery
-import org.junit.Assert.assertNotNull
 import org.junit.Test
 import java.util.logging.Logger
 

@@ -1,4 +1,8 @@
-package com.ephemeride.services
+/*
+ * Copyright (c) 2020. Heelo Mangola
+ */
+
+package com.ephemeride.wikipedia
 
 import android.content.Context
 import android.net.Uri
@@ -9,9 +13,6 @@ import com.android.volley.toolbox.JsonObjectRequest
 import com.android.volley.toolbox.Volley
 import org.json.JSONObject
 import org.jsoup.Jsoup
-import org.jsoup.nodes.Element
-import org.jsoup.nodes.TextNode
-import java.text.SimpleDateFormat
 import java.util.*
 
 object WikipediaAPIClient {
@@ -28,28 +29,28 @@ object WikipediaAPIClient {
                 "Unable to request lorem ipsum : ",
                 error
             )
-        })
+        }
+    )
 
-    fun requestEphemeride(context: Context, response: (Ephemeride) -> Unit ): Unit {
-        SimpleDateFormat("d MMMM", Locale.FRENCH).format(Date())
-            .let{ date ->
-                WikipediaQuery(
-                    action = "parse",
-                    page = "Wikipédia:Éphéméride/${date}"
-                )
-                    .let { query ->
-                        Volley.newRequestQueue(context).apply {
-                            add(makeRequest(
-                                query
-                            ) { json ->
-                                response(
-                                    Ephemeride(
-                                        events = jsonToEventList(json)
-                                    )
+    fun requestEphemeride(context: Context, response: (Ephemeride) -> Unit ) {
+        WikipediaQuery(
+            action = "parse",
+            page = WikipediaUtils.ephemeridePageTitle
+        )
+            .let { query ->
+                Volley.newRequestQueue(context).apply {
+                    add(makeRequest(
+                        query
+                    ) { json ->
+                        response(
+                            Ephemeride(
+                                events = jsonToEventList(
+                                    json
                                 )
-                            })
-                        }
-                    }
+                            )
+                        )
+                    })
+                }
             }
 
 
@@ -71,6 +72,7 @@ object WikipediaAPIClient {
 
             }?: listOf()
     }
+
 }
 
 

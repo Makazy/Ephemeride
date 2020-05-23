@@ -4,4 +4,6 @@
     <string name="ephemeride_channel_name">Éphéméride</string>
     <string name="ephemeride_channel_description">Nouvelles éphémères relative au jour.</string>
     <string name="ephemeride_title">Éphéméride du %1$te %1$tB</string>
+    <string name="ephemeride_page_title">Wikipédia:Éphéméride/%1$te %1$tB</string>
+    <string name="wikipedia_base_url">https://fr.wikipedia.org/wiki/</string>
 </resources>

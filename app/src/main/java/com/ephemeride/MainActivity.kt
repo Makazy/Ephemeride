@@ -1,22 +1,21 @@
+/*
+ * Copyright (c) 2020. Heelo Mangola
+ */
+
 package com.ephemeride
 
-import android.app.NotificationManager
-import android.os.Build
+import android.content.ComponentName
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.net.Uri
 import android.os.Bundle
-import android.text.Html
-import android.text.Spanned
-import android.text.SpannedString
-import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
-import com.android.volley.Request
-import com.android.volley.Response
-import com.android.volley.toolbox.StringRequest
-import com.android.volley.toolbox.Volley
-import com.ephemeride.services.NotificationService
-import com.ephemeride.services.WikipediaAPIClient
-import com.ephemeride.services.sendEphemerideNotification
-import java.util.*
+import com.ephemeride.controllers.EphemerideController
+import com.ephemeride.controllers.NotificationService
+import com.ephemeride.receivers.BootReceiver
+import com.ephemeride.receivers.EphemerideReceiver
+import com.ephemeride.wikipedia.WikipediaUtils
 
 class MainActivity : AppCompatActivity() {
     private val TAG = "MainActivity"
@@ -25,65 +24,48 @@ class MainActivity : AppCompatActivity() {
     private var channelName: String = ""
     private var channelDescription: String = ""
 
+    companion object {
+        lateinit var instance: MainActivity private set // Make app context available outside activity
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        instance = this
         setContentView(R.layout.main_activity)
         channelId = getString(R.string.ephemeride_channel_id)?: ""
         channelName = getString(R.string.ephemeride_channel_name)
         channelDescription = getString(R.string.ephemeride_channel_description)
 
+        // Create notification channel for ephemeride
         NotificationService.createNotificationChannel(
             this,
             channelId,
             channelName,
             channelDescription,
-            NotificationManager.IMPORTANCE_DEFAULT
+            3
+        )
+
+        // Enable BootReceiver to restart ephemeride's notifications on reboot
+        enableBootReceiver()
+
+        // Start daily ephemeride notifications
+        EphemerideController.startDailyEphemeride(this)
+    }
+
+    @Suppress("UNUSED_PARAMETER")
+    fun notifyMe(view: View) {
+        EphemerideReceiver().onReceive(this, Intent(
+            Intent.ACTION_VIEW,
+            Uri.parse(WikipediaUtils.wikiBaseURl+ WikipediaUtils.ephemeridePageTitle)
+        ))
+    }
+
+    private fun enableBootReceiver() = ComponentName(this, BootReceiver::class.java).let { bootReceiver ->
+        packageManager.setComponentEnabledSetting(
+            bootReceiver,
+            PackageManager.COMPONENT_ENABLED_STATE_ENABLED,
+            PackageManager.DONT_KILL_APP
         )
     }
 
-    fun notifyMe(view: View) {
-        WikipediaAPIClient.requestEphemeride(this) { ephemeride ->
-            NotificationService.sendEphemerideNotification(
-                this,
-                String.format(
-                    Locale.FRENCH,
-                    getString(R.string.ephemeride_title),
-                    GregorianCalendar()
-                        .apply { time = ephemeride.date }
-                ),
-                ephemeride.events.map { event ->
-                    fromHtmlCompat(event.toString(), Html.FROM_HTML_MODE_COMPACT)
-                })
-        }
-    }
-
-    private fun loremIpsumCall() {
-        val queue = Volley.newRequestQueue(this)
-        val url = "https://loripsum.net/api/1/short/headers/plaintext"
-        Log.d(TAG, "loremIpsumCall: $url")
-        val stringRequest = StringRequest(
-            Request.Method.GET,
-            url,
-            Response.Listener { response ->
-                Log.d(TAG, "Received: $response")
-                val title = response.split("\n").toTypedArray()[0]
-                val description = response.split("\n").toTypedArray()[1]
-
-                NotificationService.sendEphemerideNotification(this, title, listOf(SpannedString.valueOf(description)))
-            },
-            Response.ErrorListener { error ->
-                Log.e(
-                    TAG,
-                    "Unable to request lorem ipsum : ",
-                    error
-                )
-            })
-        queue.add(stringRequest)
-    }
-
-    @Suppress("DEPRECATION")
-    private fun fromHtmlCompat(source: String, flags: Int): Spanned =
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N)
-            Html.fromHtml(source, flags)
-        else Html.fromHtml(source)
 }
